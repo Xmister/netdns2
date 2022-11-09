@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export VERSION=1.3.2
-export BUILD_NUMBER=acquia2
+export BUILD_NUMBER=acquia4
 export TARGET=Net_DNS2-${VERSION}
 export ARTIFACT=${TARGET}-${BUILD_NUMBER}.tgz
 
