@@ -1,54 +1,21 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * DNS Library for handling lookups and updates. 
  *
- * PHP Version 5
+ * Copyright (c) 2020, Mike Pultz <mike@mikepultz.com>. All rights reserved.
  *
- * Copyright (c) 2010, Mike Pultz <mike@mikepultz.com>.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   * Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- *
- *   * Neither the name of Mike Pultz nor the names of his contributors 
- *     may be used to endorse or promote products derived from this 
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRIC
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * See LICENSE for more details.
  *
  * @category  Networking
  * @package   Net_DNS2
  * @author    Mike Pultz <mike@mikepultz.com>
- * @copyright 2010 Mike Pultz <mike@mikepultz.com>
+ * @copyright 2020 Mike Pultz <mike@mikepultz.com>
  * @license   http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @version   SVN: $Id$
- * @link      http://pear.php.net/package/Net_DNS2
+ * @link      https://netdns2.com/
  * @since     File available since Release 0.6.0
  *
- * This file contains code based off the Net::DNS::SEC Perl module by
- * Olaf M. Kolkman
+ * This file contains code based off the Net::DNS::SEC Perl module by Olaf M. Kolkman
  *
  * This is the copyright notice from the PERL Net::DNS::SEC module:
  *
@@ -96,13 +63,6 @@
  *   /                            Signature                          /
  *   /                                                               /
  *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *
- * @category Networking
- * @package  Net_DNS2
- * @author   Mike Pultz <mike@mikepultz.com>
- * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link     http://pear.php.net/package/Net_DNS2
- * @see      Net_DNS2_RR
  *
  */
 class Net_DNS2_RR_SIG extends Net_DNS2_RR
@@ -291,8 +251,8 @@ class Net_DNS2_RR_SIG extends Net_DNS2_RR
             $this->algorithm,
             $this->labels,
             $this->origttl,
-            gmmktime($e[4], $e[5], $e[6], $e[2], $e[3], $e[1]),
-            gmmktime($i[4], $i[5], $i[6], $i[2], $i[3], $i[1]),
+            gmmktime(intval($e[4]), intval($e[5]), intval($e[6]), intval($e[2]), intval($e[3]), intval($e[1])),
+            gmmktime(intval($i[4]), intval($i[5]), intval($i[6]), intval($i[2]), intval($i[3]), intval($i[1])),
             $this->keytag
         );
 
@@ -307,7 +267,7 @@ class Net_DNS2_RR_SIG extends Net_DNS2_RR
             $data .= $name;
         }
 
-        $data .= chr('0');
+        $data .= chr(0);
 
         //
         // if the signature is empty, and $this->private_key is an instance of a 
@@ -364,33 +324,17 @@ class Net_DNS2_RR_SIG extends Net_DNS2_RR
                 break;
 
             //
-            // SHA256 (PHP 5.4.8 or higher)
+            // SHA256
             //
             case Net_DNS2_Lookups::DNSSEC_ALGORITHM_RSASHA256:
-
-                if (version_compare(PHP_VERSION, '5.4.8', '<') == true) {
-
-                    throw new Net_DNS2_Exception(
-                        'SHA256 support is only available in PHP >= 5.4.8',
-                        Net_DNS2_Lookups::E_OPENSSL_INV_ALGO
-                    );
-                }
 
                 $algorithm = OPENSSL_ALGO_SHA256;
                 break;
 
             //
-            // SHA512 (PHP 5.4.8 or higher)
+            // SHA512
             //
             case Net_DNS2_Lookups::DNSSEC_ALGORITHM_RSASHA512:
-
-                if (version_compare(PHP_VERSION, '5.4.8', '<') == true) {
-
-                    throw new Net_DNS2_Exception(
-                        'SHA512 support is only available in PHP >= 5.4.8',
-                        Net_DNS2_Lookups::E_OPENSSL_INV_ALGO
-                    );
-                }
 
                 $algorithm = OPENSSL_ALGO_SHA512;
                 break;
@@ -406,7 +350,6 @@ class Net_DNS2_RR_SIG extends Net_DNS2_RR
                     'invalid or unsupported algorithm',
                     Net_DNS2_Lookups::E_OPENSSL_INV_ALGO
                 );
-                break;
             }
 
             //
@@ -415,7 +358,7 @@ class Net_DNS2_RR_SIG extends Net_DNS2_RR
             if (openssl_sign($sigdata, $this->signature, $this->private_key->instance, $algorithm) == false) {
 
                 throw new Net_DNS2_Exception(
-                    openssl_error_string(), 
+                    strval(openssl_error_string()), 
                     Net_DNS2_Lookups::E_OPENSSL_ERROR
                 );
             }
@@ -448,12 +391,3 @@ class Net_DNS2_RR_SIG extends Net_DNS2_RR
         return $data;
     }
 }
-
-/*
- * Local variables:
- * tab-width: 4
- * c-basic-offset: 4
- * c-hanging-comment-ender-p: nil
- * End:
- */
-?>

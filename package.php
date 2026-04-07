@@ -8,49 +8,48 @@ require_once 'PEAR/PackageFileManager2.php';
 
 $pkg = new PEAR_PackageFileManager2;
 
-$e = $pkg->setOptions(array(
+$e = $pkg->setOptions([
         
         'baseinstalldir'    => '/',
-        'packagedirectory'  => '/u/devel/www/net_dns/Net_DNS2/',
-        'ignore'            => array(
+        'packagedirectory'  => '/u/devel/net_dns/Net_DNS2_1.5.x/',
+        'ignore'            => [
             'package.php',
             'package.xml',
             'TODO',
             'composer.json'
-        ),
-        'installexceptions' => array('phpdoc' => '/*'),
-        'dir_roles'         => array(
+        ],
+        'installexceptions' => [ 'phpdoc' => '/*' ],
+        'dir_roles'         => [
             'tests'     => 'test'
-        ),
-        'exceptions'        => array(
+        ],
+        'exceptions'        => [
             'LICENSE'   => 'doc',
             'README.md' => 'doc'
-        )
-));
+        ]
+]);
 
 $pkg->setPackage('Net_DNS2');
-$pkg->setSummary('PHP5 Resolver library used to communicate with a DNS server.');
-$pkg->setDescription("Provides (roughly) the same functionality as Net_DNS, but using PHP5 objects, exceptions for error handling, better sockets support.\n\nThis release is (in most cases) 2x - 10x faster than Net_DNS, as well as includes more RR's (including DNSSEC RR's), and improved sockets and streams support.");
+$pkg->setSummary('PHP Resolver library used to communicate with a DNS server.');
+$pkg->setDescription("Provides (roughly) the same functionality as Net_DNS, but using modern PHP objects, exceptions for error handling, better sockets support.\n\nThis release is (in most cases) 2x - 10x faster than Net_DNS, as well as includes more RR's (including DNSSEC RR's), and improved sockets and streams support.");
 $pkg->setChannel('pear.php.net');
-$pkg->setAPIVersion('1.4.4');
-$pkg->setReleaseVersion('1.4.4');
+$pkg->setAPIVersion('1.5.5');
+$pkg->setReleaseVersion('1.5.5');
 $pkg->setReleaseStability('stable');
 $pkg->setAPIStability('stable');
 $pkg->setNotes(
-"- bugfix when returning an empty bitmap-type in BitMap.php - patch from BugMaster510945.\n" .
-"- added the BIND 9 private record RR (TYPE65534) - patch from BugMaster510945.\n" .
-"- added DNSSEC algorithms 13-16 (ECDSAP256SHA256, ECDSAP384SHA384, ED25519, and ED448).\n" .
-"- added SSHFP algoritm ED25519.\n" .
-"- modified Net_DNS2::sendPacket() to use current()/next() rather than the deprecated each() (deprecated in 7.2).\n"
+"- increased minimum PHP requirement to v7.1\n" .
+"- fixed the PHP 8.4 deprecation notices - #154.\n" .
+"- fixed the infinite loop issue related to the v1.5.4 changes - #146\n" .
+"- modified the TCP write process to avoid possible TCP segmentation with the length prefix.\n" .
+"- added support for microsecond level timeout values by passing a float value to the timeout option instead of a whole integer.\n" .
+"- updated the PEAR package.php file; the last version was missing some new files.\n"
 );
 $pkg->setPackageType('php');
 $pkg->addRelease();
-$pkg->setPhpDep('5.2.1');
+$pkg->setPhpDep('7.1');
 $pkg->setPearinstallerDep('1.4.0a12');
 $pkg->addMaintainer('lead', 'mikepultz', 'Mike Pultz', 'mike@mikepultz.com');
-$pkg->setLicense('BSD License', 'http://www.opensource.org/licenses/bsd-license.php');
+$pkg->setLicense('BSD License', 'https://opensource.org/license/bsd-3-clause/');
 $pkg->generateContents();
 
 $pkg->writePackageFile();
-
-?>

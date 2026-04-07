@@ -1,50 +1,18 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * DNS Library for handling lookups and updates. 
  *
- * PHP Version 5
+ * Copyright (c) 2020, Mike Pultz <mike@mikepultz.com>. All rights reserved.
  *
- * Copyright (c) 2010, Mike Pultz <mike@mikepultz.com>.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   * Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- *
- *   * Neither the name of Mike Pultz nor the names of his contributors 
- *     may be used to endorse or promote products derived from this 
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRIC
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * See LICENSE for more details.
  *
  * @category  Networking
  * @package   Net_DNS2
  * @author    Mike Pultz <mike@mikepultz.com>
- * @copyright 2010 Mike Pultz <mike@mikepultz.com>
+ * @copyright 2020 Mike Pultz <mike@mikepultz.com>
  * @license   http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @version   SVN: $Id$
- * @link      http://pear.php.net/package/Net_DNS2
+ * @link      https://netdns2.com/
  * @since     File available since Release 0.6.0
  *
  */
@@ -66,13 +34,6 @@
  *      |                   ALTITUDE                    |
  *      |                                               |
  *      +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
- *
- * @category Networking
- * @package  Net_DNS2
- * @author   Mike Pultz <mike@mikepultz.com>
- * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link     http://pear.php.net/package/Net_DNS2
- * @see      Net_DNS2_RR
  *
  */
 class Net_DNS2_RR_LOC extends Net_DNS2_RR
@@ -115,8 +76,7 @@ class Net_DNS2_RR_LOC extends Net_DNS2_RR
     /*
      * used for quick power-of-ten lookups
      */
-    private $_powerOfTen = array(1, 10, 100, 1000, 10000, 100000, 
-                                 1000000,10000000,100000000,1000000000);
+    private $_powerOfTen = [ 0.01, 0.1, 1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 0, 0, 0, 0, 0 ];
 
     /*
      * some conversion values
@@ -179,9 +139,9 @@ class Net_DNS2_RR_LOC extends Net_DNS2_RR
             //
             // latitude
             //
-            $latdeg     = $x[1];
-            $latmin     = (isset($x[3])) ? $x[3] : 0;
-            $latsec     = (isset($x[5])) ? $x[5] : 0;
+            $latdeg     = floatval($x[1]);
+            $latmin     = floatval((isset($x[3])) ? $x[3] : 0);
+            $latsec     = floatval((isset($x[5])) ? $x[5] : 0);
             $lathem     = strtoupper($x[6]);
 
             $this->latitude = $this->_dms2d($latdeg, $latmin, $latsec, $lathem);
@@ -189,9 +149,9 @@ class Net_DNS2_RR_LOC extends Net_DNS2_RR
             //
             // longitude
             //
-            $londeg     = $x[7];
-            $lonmin     = (isset($x[9])) ? $x[9] : 0;
-            $lonsec     = (isset($x[11])) ? $x[11] : 0;
+            $londeg     = floatval($x[7]);
+            $lonmin     = floatval((isset($x[9])) ? $x[9] : 0);
+            $lonsec     = floatval((isset($x[11])) ? $x[11] : 0);
             $lonhem     = strtoupper($x[12]);
 
             $this->longitude = $this->_dms2d($londeg, $lonmin, $lonsec, $lonhem);
@@ -237,6 +197,7 @@ class Net_DNS2_RR_LOC extends Net_DNS2_RR
             // version must be 0 per RFC 1876 section 2
             //
             $this->version = $x['ver'];
+
             if ($this->version == 0) {
 
                 $this->size         = $this->_precsizeNtoA($x['size']);
@@ -277,8 +238,6 @@ class Net_DNS2_RR_LOC extends Net_DNS2_RR
 
                 return false;
             }
-
-            return true;
         }
 
         return false;
@@ -346,10 +305,9 @@ class Net_DNS2_RR_LOC extends Net_DNS2_RR
      */
     private function _precsizeNtoA($prec)
     {
-        $mantissa = (($prec >> 4) & 0x0f) % 10;
-        $exponent = (($prec >> 0) & 0x0f) % 10;
+        $mantissa = $prec >> 4;
 
-        return $mantissa * $this->_powerOfTen[$exponent];
+        return strval($mantissa * $this->_powerOfTen[$prec & 0x0F]);
     }
 
     /**
@@ -365,22 +323,24 @@ class Net_DNS2_RR_LOC extends Net_DNS2_RR
     private function _precsizeAtoN($prec)
     {
         $exponent = 0;
-        while ($prec >= 10) {
 
-            $prec /= 10;
-            ++$exponent;
+        while($prec > $this->_powerOfTen[1 + $exponent]) {
+
+            $exponent++;
         }
 
-        return ($prec << 4) | ($exponent & 0x0f);
+        $mantissa = intval(0.5 + ($prec / $this->_powerOfTen[$exponent]));
+
+        return ($mantissa & 0xF) << 4 | $exponent;
     }
 
     /**
      * convert lat/lng in deg/min/sec/hem to decimal value
      *
-     * @param integer $deg the degree value
-     * @param integer $min the minutes value
-     * @param integer $sec the seconds value
-     * @param string  $hem the hemisphere (N/E/S/W)
+     * @param float  $deg the degree value
+     * @param float  $min the minutes value
+     * @param float  $sec the seconds value
+     * @param string $hem the hemisphere (N/E/S/W)
      *
      * @return float the decinmal value
      * @access private
@@ -429,12 +389,3 @@ class Net_DNS2_RR_LOC extends Net_DNS2_RR
         return sprintf('%d %02d %02d.%03d %s', $deg, $min, $sec, round($msec), $hem);
     }
 }
-
-/*
- * Local variables:
- * tab-width: 4
- * c-basic-offset: 4
- * c-hanging-comment-ender-p: nil
- * End:
- */
-?>

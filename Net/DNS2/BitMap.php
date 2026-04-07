@@ -1,50 +1,18 @@
 <?php
-/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
 /**
  * DNS Library for handling lookups and updates. 
  *
- * PHP Version 5
+ * Copyright (c) 2020, Mike Pultz <mike@mikepultz.com>. All rights reserved.
  *
- * Copyright (c) 2010, Mike Pultz <mike@mikepultz.com>.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   * Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- *
- *   * Neither the name of Mike Pultz nor the names of his contributors 
- *     may be used to endorse or promote products derived from this 
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRIC
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * See LICENSE for more details.  
  *
  * @category  Networking
  * @package   Net_DNS2
  * @author    Mike Pultz <mike@mikepultz.com>
- * @copyright 2010 Mike Pultz <mike@mikepultz.com>
+ * @copyright 2020 Mike Pultz <mike@mikepultz.com>
  * @license   http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @version   SVN: $Id$
- * @link      http://pear.php.net/package/Net_DNS2
+ * @link      https://netdns2.com/
  * @since     File available since Release 0.6.0
  *
  */
@@ -52,13 +20,6 @@
 /**
  * a class to handle converting RR bitmaps to arrays and back; used on NSEC
  * and NSEC3 RR's
- *
- * @category Networking
- * @package  Net_DNS2
- * @author   Mike Pultz <mike@mikepultz.com>
- * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link     http://pear.php.net/package/Net_DNS2
- * @see      Net_DNS2_Packet
  *
  */
 class Net_DNS2_BitMap
@@ -77,10 +38,10 @@ class Net_DNS2_BitMap
     public static function bitMapToArray($data)
     {
         if (strlen($data) == 0) {
-            return array();
+            return [];
         }
 
-        $output = array();
+        $output = [];
         $offset = 0;
         $length = strlen($data);
 
@@ -103,9 +64,10 @@ class Net_DNS2_BitMap
             // have a 'B' flag for unpack()
             //
             $bitstr = '';
-            foreach ($bitmap as $r) {
-                
-                $bitstr .= sprintf('%08b', $r);
+            if ($bitmap !== false) {
+                foreach ($bitmap as $r) {
+                    $bitstr .= sprintf('%08b', $r);
+                }
             }
 
             $blen = strlen($bitstr);
@@ -150,7 +112,7 @@ class Net_DNS2_BitMap
         // go through each RR
         //
         $max = 0;
-        $bm = array();
+        $bm = [];
 
         foreach ($data as $rr) {
         
@@ -159,8 +121,11 @@ class Net_DNS2_BitMap
             //
             // get the type id for the RR
             //
-            $type = @Net_DNS2_Lookups::$rr_types_by_name[$rr];
-            if (isset($type)) {
+            $type = null;
+
+            if (isset(Net_DNS2_Lookups::$rr_types_by_name[$rr]) == true) {
+
+                $type = Net_DNS2_Lookups::$rr_types_by_name[$rr];
 
                 //
                 // skip meta types or qtypes
@@ -177,8 +142,12 @@ class Net_DNS2_BitMap
                 // if it's not found, then it must be defined as TYPE<id>, per
                 // RFC3845 section 2.2, if it's not, we ignore it.
                 //
-                list($name, $type) = explode('TYPE', $rr);
-                if (!isset($type)) {
+                list($name, $index) = explode('TYPE', $rr);
+                
+                if ( (strlen($index) > 0) && (is_numeric($index) == true) ) {
+
+                    $type = $index;
+                } else {
 
                     continue;
                 }
@@ -234,21 +203,13 @@ class Net_DNS2_BitMap
 
         $bin = substr(chunk_split(strrev($number), 4, '-'), 0, -1);
         $temp = preg_split('[-]', $bin, -1, PREG_SPLIT_DELIM_CAPTURE);
-        
-        for ($i = count($temp)-1;$i >= 0;$i--) {
-            
-            $result = $result . base_convert(strrev($temp[$i]), 2, 16);
+
+        if ($temp !== false) {
+            for ($i = count($temp)-1;$i >= 0;$i--) {
+                $result = $result . base_convert(strrev($temp[$i]), 2, 16);
+            }
         }
         
         return strtoupper($result);
     }
 }
-
-/*
- * Local variables:
- * tab-width: 4
- * c-basic-offset: 4
- * c-hanging-comment-ender-p: nil
- * End:
- */
-?>
